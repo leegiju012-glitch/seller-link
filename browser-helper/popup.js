@@ -86,18 +86,49 @@ function sourceSmartStoreUrl(currentUrl) {
   return null;
 }
 
+function smartStoreId(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname !== 'smartstore.naver.com') return null;
+    return parsed.pathname.split('/').filter(Boolean)[0] || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function sellerInfoTabFor(activeTab) {
+  const activeSourceUrl = sourceSmartStoreUrl(activeTab.url || '');
+  if (!activeSourceUrl) return null;
+  if (new URL(activeTab.url).hostname === 'shopping.naver.com') return activeTab;
+
+  const currentStoreId = smartStoreId(activeSourceUrl);
+  const sellerInfoTabs = await chrome.tabs.query({
+    url: ['https://shopping.naver.com/popup/seller-info/*']
+  });
+  return sellerInfoTabs.find((tab) => (
+    smartStoreId(sourceSmartStoreUrl(tab.url || '') || '') === currentStoreId
+  )) || null;
+}
+
 analyze.addEventListener('click', async () => {
   analyze.disabled = true;
   result.hidden = true;
   message.textContent = '공개 판매자 정보 확인 중…';
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    const sourceUrl = tab?.url ? sourceSmartStoreUrl(tab.url) : null;
-    if (!tab?.id || !sourceUrl) {
-      throw new Error('스마트스토어 또는 인증 완료된 판매자 정보 팝업에서 실행하세요.');
+    if (!tab?.id) {
+      throw new Error('현재 탭을 찾지 못했습니다.');
+    }
+    const sourceUrl = tab.url ? sourceSmartStoreUrl(tab.url) : null;
+    if (!sourceUrl) {
+      throw new Error('스마트스토어 페이지에서 실행하세요.');
+    }
+    const sellerTab = await sellerInfoTabFor(tab);
+    if (!sellerTab?.id) {
+      throw new Error('판매자 정보 팝업에서 상세정보 확인을 완료한 뒤, 원래 스마트스토어 탭에서 다시 실행하세요.');
     }
     const frames = await chrome.scripting.executeScript({
-      target: { tabId: tab.id, allFrames: true },
+      target: { tabId: sellerTab.id, allFrames: true },
       func: extractPublicIdentifiers
     });
     const identifiers = frames

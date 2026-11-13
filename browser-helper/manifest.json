@@ -3,7 +3,7 @@
   "name": "Seller Link 도우미",
   "version": "1.0.0",
   "description": "현재 스마트스토어의 공개 판매자 정보로 연결 판매처를 조회합니다.",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "tabs"],
   "host_permissions": [
     "https://seller-link.onrender.com/*",
     "https://shopping.naver.com/*"

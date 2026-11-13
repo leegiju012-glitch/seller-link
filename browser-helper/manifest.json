@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Seller Link 도우미",
+  "version": "1.0.0",
+  "description": "현재 스마트스토어의 공개 판매자 정보로 연결 판매처를 조회합니다.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://seller-link.onrender.com/*"],
+  "action": {
+    "default_title": "Seller Link 분석",
+    "default_popup": "popup.html"
+  }
+}

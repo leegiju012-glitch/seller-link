@@ -1,0 +1,11 @@
+* { box-sizing: border-box; }
+body { width: 320px; margin: 0; font: 14px/1.45 system-ui, sans-serif; color: #111; }
+main { padding: 16px; }
+button { width: 100%; padding: 10px; border: 1px solid #111; background: #fff; color: #111; font: inherit; cursor: pointer; }
+button:disabled { opacity: .5; cursor: wait; }
+#message { min-height: 20px; margin: 12px 0; }
+dl { display: grid; grid-template-columns: 80px 1fr; gap: 4px 8px; margin: 0 0 14px; }
+dt { color: #666; } dd { margin: 0; word-break: break-all; }
+.market { border-top: 1px solid #ddd; padding: 10px 0; }
+.market p { margin: 3px 0; }
+a { color: inherit; }

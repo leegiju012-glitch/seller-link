@@ -23,3 +23,10 @@ class LookupResult(BaseModel):
     business: Business
     marketplaces: list[Marketplace]
     warnings: list[str] = Field(default_factory=list)
+
+
+class ExtensionLookupRequest(BaseModel):
+    business_number: str
+    source_url: str
+    phones: list[str] = Field(default_factory=list, max_length=10)
+    emails: list[str] = Field(default_factory=list, max_length=10)

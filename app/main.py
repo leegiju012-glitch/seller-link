@@ -52,9 +52,11 @@ async def healthz() -> dict[str, bool]:
 async def lookup(q: str = Query(min_length=1, max_length=2048)) -> LookupResult:
     value = q.strip()
     async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
+        source_url: str | None = None
         if is_url(value):
             brno = await business_number_from_url(client, value)
             input_type = "smartstore_url"
+            source_url = value if "://" in value else f"https://{value}"
         else:
             try:
                 brno = normalize_business_number(value)
@@ -68,6 +70,15 @@ async def lookup(q: str = Query(min_length=1, max_length=2048)) -> LookupResult:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
 
         marketplaces = await search_marketplaces(client, brno, settings)
+        if source_url:
+            marketplaces = [item for item in marketplaces if item.platform != "네이버 스마트스토어"]
+            marketplaces.insert(0, Marketplace(
+                platform="네이버 스마트스토어",
+                status="found",
+                store_name="입력한 스마트스토어",
+                store_url=source_url,
+                evidence="입력한 스토어 URL에서 사업자등록번호 추출",
+            ))
         for domain in business.domains:
             marketplaces.append(Marketplace(platform="자사몰", status="found", store_name=business.company_name, store_url=domain, evidence="공정위 공시 인터넷도메인"))
         return LookupResult(input_type=input_type, business=business, marketplaces=marketplaces)

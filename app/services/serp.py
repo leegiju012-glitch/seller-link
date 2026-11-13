@@ -26,26 +26,26 @@ async def _search_platform(
     client: httpx.AsyncClient, platform: str, domain: str, brno: str, key: str
 ) -> Marketplace:
     formatted = f"{brno[:3]}-{brno[3:5]}-{brno[5:]}"
-    params = {"engine": "google", "q": f'site:{domain} "{formatted}"', "api_key": key, "hl": "ko", "gl": "kr", "num": 10}
-    try:
-        response = await client.get("https://serpapi.com/search.json", params=params)
-        response.raise_for_status()
-        payload = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
-        return Marketplace(platform=platform, status="error", evidence=f"검색 실패: {exc}")
+    for keyword in (formatted, brno):
+        params = {"engine": "google", "q": f'site:{domain} "{keyword}"', "api_key": key, "hl": "ko", "gl": "kr", "num": 10}
+        try:
+            response = await client.get("https://serpapi.com/search.json", params=params)
+            response.raise_for_status()
+            payload = response.json()
+        except (httpx.HTTPError, ValueError) as exc:
+            return Marketplace(platform=platform, status="error", evidence=f"검색 실패: {exc}")
 
-    results = payload.get("organic_results", [])
-    for result in results:
-        link = result.get("link")
-        if not link or not urlparse(link).netloc.endswith(domain):
-            continue
-        return Marketplace(
-            platform=platform,
-            status="found",
-            store_name=_store_name(result),
-            store_url=link,
-            evidence="사업자등록번호 도메인 검색 결과",
-        )
+        for result in payload.get("organic_results", []):
+            link = result.get("link")
+            if not link or not urlparse(link).netloc.endswith(domain):
+                continue
+            return Marketplace(
+                platform=platform,
+                status="found",
+                store_name=_store_name(result),
+                store_url=link,
+                evidence=f"사업자등록번호({keyword}) 도메인 검색 결과",
+            )
     return Marketplace(platform=platform, status="not_found")
 
 

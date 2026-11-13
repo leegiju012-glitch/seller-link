@@ -69,14 +69,32 @@ function render(data) {
   result.hidden = false;
 }
 
+function sourceSmartStoreUrl(currentUrl) {
+  try {
+    const current = new URL(currentUrl);
+    if (current.hostname === 'smartstore.naver.com') return current.href;
+    if (
+      current.hostname === 'shopping.naver.com' &&
+      current.pathname.startsWith('/popup/seller-info/')
+    ) {
+      const previous = current.searchParams.get('prevUrl');
+      if (previous && new URL(previous).hostname === 'smartstore.naver.com') return previous;
+    }
+  } catch (_) {
+    return null;
+  }
+  return null;
+}
+
 analyze.addEventListener('click', async () => {
   analyze.disabled = true;
   result.hidden = true;
   message.textContent = '공개 판매자 정보 확인 중…';
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id || !/^https:\/\/smartstore\.naver\.com\//.test(tab.url || '')) {
-      throw new Error('스마트스토어 페이지를 연 뒤 실행하세요.');
+    const sourceUrl = tab?.url ? sourceSmartStoreUrl(tab.url) : null;
+    if (!tab?.id || !sourceUrl) {
+      throw new Error('스마트스토어 또는 인증 완료된 판매자 정보 팝업에서 실행하세요.');
     }
     const frames = await chrome.scripting.executeScript({
       target: { tabId: tab.id, allFrames: true },
@@ -92,7 +110,7 @@ analyze.addEventListener('click', async () => {
       }
       throw new Error('현재 페이지의 공개 판매자 정보에서 사업자등록번호를 찾지 못했습니다.');
     }
-    identifiers.source_url = tab.url;
+    identifiers.source_url = sourceUrl;
     delete identifiers.confidence;
     delete identifiers.requires_verification;
     message.textContent = '연결 판매처 조회 중…';

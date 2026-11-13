@@ -2,6 +2,7 @@ const API_URL = 'https://seller-link.onrender.com/api/extension-lookup';
 const analyze = document.querySelector('#analyze');
 const message = document.querySelector('#message');
 const result = document.querySelector('#result');
+const sellerTabs = document.querySelector('#seller-tabs');
 const business = document.querySelector('#business');
 const markets = document.querySelector('#markets');
 
@@ -88,18 +89,18 @@ function sourceSmartStoreUrl(currentUrl) {
   return null;
 }
 
-analyze.addEventListener('click', async () => {
+async function analyzeSellerPopup(tab) {
   analyze.disabled = true;
   result.hidden = true;
+  sellerTabs.hidden = true;
   message.textContent = '공개 판매자 정보 확인 중…';
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
-      throw new Error('현재 탭을 찾지 못했습니다.');
+      throw new Error('판매자 정보 창을 찾지 못했습니다.');
     }
     const sourceUrl = tab.url ? sourceSmartStoreUrl(tab.url) : null;
-    if (!sourceUrl || !tab.url?.startsWith('https://shopping.naver.com/popup/seller-info/')) {
-      throw new Error('인증 완료된 판매자 정보 팝업 창을 활성화한 뒤 실행하세요.');
+    if (!sourceUrl) {
+      throw new Error('스마트스토어와 연결된 판매자 정보 창이 아닙니다.');
     }
     const frames = await chrome.scripting.executeScript({
       target: { tabId: tab.id, allFrames: true },
@@ -134,4 +135,35 @@ analyze.addEventListener('click', async () => {
   } finally {
     analyze.disabled = false;
   }
+}
+
+analyze.addEventListener('click', async () => {
+  result.hidden = true;
+  sellerTabs.hidden = true;
+  message.textContent = '열린 판매자 정보 창 확인 중…';
+  try {
+    const tabs = await chrome.tabs.query({
+      url: ['https://shopping.naver.com/popup/seller-info/*']
+    });
+    const candidates = tabs
+      .map((tab) => ({ tab, sourceUrl: sourceSmartStoreUrl(tab.url || '') }))
+      .filter(({ sourceUrl }) => sourceUrl);
+    if (!candidates.length) {
+      throw new Error('인증 완료된 판매자 정보 창을 먼저 열어주세요.');
+    }
+    sellerTabs.innerHTML = candidates.map(({ tab, sourceUrl }) => {
+      const storeId = new URL(sourceUrl).pathname.split('/').filter(Boolean)[0] || '스토어';
+      return `<button class="seller-tab" type="button" data-tab-id="${escape(tab.id)}"><strong>${escape(storeId)}</strong><small>이 판매자 정보 분석</small></button>`;
+    }).join('');
+    sellerTabs.hidden = false;
+    message.textContent = '분석할 판매자 정보 창을 선택하세요.';
+  } catch (error) {
+    message.textContent = error.message || '판매자 정보 창을 찾지 못했습니다.';
+  }
+});
+
+sellerTabs.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-tab-id]');
+  if (!button) return;
+  chrome.tabs.get(Number(button.dataset.tabId)).then(analyzeSellerPopup);
 });

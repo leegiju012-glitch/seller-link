@@ -9,7 +9,11 @@ from bs4 import BeautifulSoup
 
 from app.config import Settings
 from app.models import Marketplace
-from app.services.identifiers import PublicIdentifiers, extract_business_number
+from app.services.identifiers import (
+    PublicIdentifiers,
+    extract_business_number,
+    extract_public_identifiers,
+)
 
 
 PLATFORM_DOMAINS = (
@@ -177,6 +181,20 @@ async def discover_cafe24_store(
         store_url=_canonical_url_from_html(html, candidate_url),
         evidence="스마트스토어 ID 기반 공개 Cafe24 도메인 · 사업자등록번호 일치",
     )
+
+
+async def public_identifiers_from_cafe24(
+    client: httpx.AsyncClient, smartstore_url: str
+) -> PublicIdentifiers | None:
+    """Fallback for a rate-limited SmartStore page; never bypasses the restriction."""
+    store_id = _smartstore_id(smartstore_url)
+    if not store_id:
+        return None
+    html = await _fetch_public_html(client, f"https://{store_id}.cafe24.com")
+    if not html:
+        return None
+    identifiers = extract_public_identifiers(html)
+    return identifiers if identifiers.business_number else None
 
 
 async def discover_verified_stores(

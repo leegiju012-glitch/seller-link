@@ -16,7 +16,11 @@ from app.services.identifiers import (
     normalize_business_number,
 )
 from app.services.naver import search_smartstores
-from app.services.pivot import discover_cafe24_store, discover_verified_stores
+from app.services.pivot import (
+    discover_cafe24_store,
+    discover_verified_stores,
+    public_identifiers_from_cafe24,
+)
 from app.services.serp import search_marketplaces
 
 ROOT = Path(__file__).parent
@@ -80,8 +84,17 @@ async def lookup(q: str = Query(min_length=1, max_length=2048)) -> LookupResult:
     async with httpx.AsyncClient(timeout=settings.request_timeout_seconds) as client:
         source_url: str | None = None
         source_identifiers: PublicIdentifiers | None = None
+        source_used_cafe24_fallback = False
         if is_url(value):
-            source_identifiers = await public_identifiers_from_url(client, value)
+            try:
+                source_identifiers = await public_identifiers_from_url(client, value)
+            except HTTPException as exc:
+                if exc.status_code != 422:
+                    raise
+                source_identifiers = await public_identifiers_from_cafe24(client, value)
+                source_used_cafe24_fallback = source_identifiers is not None
+                if not source_identifiers:
+                    raise exc
             brno = source_identifiers.business_number
             assert brno
             input_type = "smartstore_url"
@@ -114,7 +127,11 @@ async def lookup(q: str = Query(min_length=1, max_length=2048)) -> LookupResult:
                 status="found",
                 store_name="입력한 스마트스토어",
                 store_url=source_url,
-                evidence="입력한 스토어 URL에서 사업자등록번호 추출",
+                evidence=(
+                    "입력한 스토어 URL에서 사업자등록번호 추출"
+                    if not source_used_cafe24_fallback
+                    else "스마트스토어 ID 기반 공개 Cafe24 도메인에서 사업자등록번호 확인"
+                ),
             ))
         for domain in business.domains:
             if "://" not in domain:

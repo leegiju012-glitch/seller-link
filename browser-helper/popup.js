@@ -37,6 +37,7 @@ async function extractPublicIdentifiers() {
     return {
       source_url: location.href,
       business_number: candidates[0]?.number,
+      confidence: candidates[0]?.score || 0,
       phones: [...new Set(phones)].slice(0, 10),
       emails: [...new Set(emails)].slice(0, 10)
     };
@@ -75,13 +76,19 @@ analyze.addEventListener('click', async () => {
     if (!tab?.id || !/^https:\/\/smartstore\.naver\.com\//.test(tab.url || '')) {
       throw new Error('스마트스토어 페이지를 연 뒤 실행하세요.');
     }
-    const [{ result: identifiers }] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
+    const frames = await chrome.scripting.executeScript({
+      target: { tabId: tab.id, allFrames: true },
       func: extractPublicIdentifiers
     });
+    const identifiers = frames
+      .map((frame) => frame.result)
+      .filter((value) => value?.business_number)
+      .sort((left, right) => right.confidence - left.confidence)[0];
     if (!identifiers?.business_number) {
       throw new Error('현재 페이지의 공개 판매자 정보에서 사업자등록번호를 찾지 못했습니다.');
     }
+    identifiers.source_url = tab.url;
+    delete identifiers.confidence;
     message.textContent = '연결 판매처 조회 중…';
     const response = await fetch(API_URL, {
       method: 'POST',

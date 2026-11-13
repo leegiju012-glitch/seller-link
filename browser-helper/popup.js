@@ -35,11 +35,13 @@ async function extractPublicIdentifiers() {
       .filter((phone) => /^0\d{8,10}$/.test(phone));
     const emails = [...text.matchAll(/(?<![\w.+-])[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?![\w.+-])/g)]
       .map((match) => match[0].toLowerCase());
+    const companyMatch = text.match(/상호명\s*\n?\s*([^\n]+)/);
     return {
       source_url: location.href,
       business_number: candidates[0]?.number,
       confidence: candidates[0]?.score || 0,
       requires_verification: /인증\s*절차\s*이후\s*확인/.test(text),
+      company_name: companyMatch?.[1]?.trim() || null,
       phones: [...new Set(phones)].slice(0, 10),
       emails: [...new Set(emails)].slice(0, 10)
     };
@@ -52,6 +54,15 @@ async function extractPublicIdentifiers() {
     await new Promise((resolve) => setTimeout(resolve, 700));
   }
   return collect();
+}
+
+function extractBasicCompanyName() {
+  const match = (document.body.innerText || '').match(/상호명\s*\n?\s*([^\n]+)/);
+  return match?.[1]?.trim() || null;
+}
+
+function normalizedCompanyName(value) {
+  return String(value || '').replace(/\s|\([^)]*\)/g, '').toLowerCase();
 }
 
 function render(data) {
@@ -135,15 +146,30 @@ analyze.addEventListener('click', async () => {
       .map((frame) => frame.result)
       .filter((value) => value?.business_number)
       .sort((left, right) => right.confidence - left.confidence)[0];
+    let currentStoreCompany = null;
+    if (new URL(tab.url).hostname === 'smartstore.naver.com') {
+      const [{ result: companyName }] = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: extractBasicCompanyName
+      });
+      currentStoreCompany = companyName;
+    }
     if (!identifiers?.business_number) {
       if (frames.some((frame) => frame.result?.requires_verification)) {
         throw new Error('네이버가 판매자 상세정보를 인증 뒤에만 보여줍니다. 페이지의 상세정보 확인에서 직접 인증한 뒤 다시 실행하세요.');
       }
       throw new Error('현재 페이지의 공개 판매자 정보에서 사업자등록번호를 찾지 못했습니다.');
     }
+    if (
+      currentStoreCompany && identifiers.company_name &&
+      normalizedCompanyName(currentStoreCompany) !== normalizedCompanyName(identifiers.company_name)
+    ) {
+      throw new Error('현재 스토어와 다른 판매자 정보 팝업입니다. 이전 판매자 정보 팝업을 닫고 다시 확인하세요.');
+    }
     identifiers.source_url = sourceUrl;
     delete identifiers.confidence;
     delete identifiers.requires_verification;
+    delete identifiers.company_name;
     message.textContent = '연결 판매처 조회 중…';
     const response = await fetch(API_URL, {
       method: 'POST',

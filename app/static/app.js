@@ -8,7 +8,7 @@ const marketplaces = document.querySelector('#marketplaces');
 
 const field = (name, value) => `<dt>${name}</dt><dd>${value || '-'}</dd>`;
 const escape = (value) => String(value || '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
-const label = (status) => ({ found: '입점 확인', not_found: '검색 미확인', not_checked: '미설정', error: '오류' }[status] || status);
+const label = (status) => ({ found: '입점 확인', not_found: '입점 X', not_checked: '확인 X', error: '확인 X' }[status] || status);
 
 function card(item) {
   const link = item.store_url ? `<a href="${escape(item.store_url)}" target="_blank" rel="noreferrer">${escape(item.store_name || item.store_url)}</a>` : '-';

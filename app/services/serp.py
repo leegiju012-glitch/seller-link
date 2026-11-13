@@ -8,7 +8,6 @@ from app.models import Marketplace
 
 PLATFORMS = (
     ("쿠팡", "coupang.com"),
-    ("네이버 스마트스토어", "smartstore.naver.com"),
     ("지마켓", "gmarket.co.kr"),
     ("11번가", "11st.co.kr"),
     ("옥션", "auction.co.kr"),

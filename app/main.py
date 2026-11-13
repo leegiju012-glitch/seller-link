@@ -14,6 +14,7 @@ from app.services.identifiers import (
     is_url,
     normalize_business_number,
 )
+from app.services.naver import search_smartstores
 from app.services.serp import search_marketplaces
 
 ROOT = Path(__file__).parent
@@ -70,6 +71,7 @@ async def lookup(q: str = Query(min_length=1, max_length=2048)) -> LookupResult:
             raise HTTPException(status_code=502, detail=str(exc)) from exc
 
         marketplaces = await search_marketplaces(client, brno, settings)
+        marketplaces = await search_smartstores(client, brno, settings) + marketplaces
         if source_url:
             marketplaces = [item for item in marketplaces if item.platform != "네이버 스마트스토어"]
             marketplaces.insert(0, Marketplace(
@@ -80,5 +82,12 @@ async def lookup(q: str = Query(min_length=1, max_length=2048)) -> LookupResult:
                 evidence="입력한 스토어 URL에서 사업자등록번호 추출",
             ))
         for domain in business.domains:
-            marketplaces.append(Marketplace(platform="자사몰", status="found", store_name=business.company_name, store_url=domain, evidence="공정위 공시 인터넷도메인"))
+            is_smartstore = "smartstore" in domain.lower()
+            marketplaces.append(Marketplace(
+                platform="네이버 스마트스토어" if is_smartstore else "자사몰",
+                status="found",
+                store_name=business.company_name,
+                store_url=domain if "://" in domain else None,
+                evidence="공정위 공시 인터넷도메인",
+            ))
         return LookupResult(input_type=input_type, business=business, marketplaces=marketplaces)

@@ -25,6 +25,7 @@ async function extractPublicIdentifiers() {
       const number = match[1].replace(/\D/g, '');
       if (!validBusinessNumber(number)) continue;
       const nearby = text.slice(Math.max(0, match.index - 180), match.index + match[0].length + 180).toLowerCase();
+      if (nearby.includes('네이버㈜') || nearby.includes('naver corp') || nearby.includes('대표이사')) continue;
       const score = ['사업자', 'business', 'brno', '사업자등록'].filter((token) => nearby.includes(token)).length;
       candidates.push({ number, score });
     }
@@ -38,6 +39,7 @@ async function extractPublicIdentifiers() {
       source_url: location.href,
       business_number: candidates[0]?.number,
       confidence: candidates[0]?.score || 0,
+      requires_verification: /인증\s*절차\s*이후\s*확인/.test(text),
       phones: [...new Set(phones)].slice(0, 10),
       emails: [...new Set(emails)].slice(0, 10)
     };
@@ -85,10 +87,14 @@ analyze.addEventListener('click', async () => {
       .filter((value) => value?.business_number)
       .sort((left, right) => right.confidence - left.confidence)[0];
     if (!identifiers?.business_number) {
+      if (frames.some((frame) => frame.result?.requires_verification)) {
+        throw new Error('네이버가 판매자 상세정보를 인증 뒤에만 보여줍니다. 페이지의 상세정보 확인에서 직접 인증한 뒤 다시 실행하세요.');
+      }
       throw new Error('현재 페이지의 공개 판매자 정보에서 사업자등록번호를 찾지 못했습니다.');
     }
     identifiers.source_url = tab.url;
     delete identifiers.confidence;
+    delete identifiers.requires_verification;
     message.textContent = '연결 판매처 조회 중…';
     const response = await fetch(API_URL, {
       method: 'POST',

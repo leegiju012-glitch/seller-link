@@ -1,9 +1,19 @@
 import re
+from dataclasses import dataclass
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
 BRNO_PATTERN = re.compile(r"(?<!\d)(\d{3}[-\s]?\d{2}[-\s]?\d{5})(?!\d)")
+PHONE_PATTERN = re.compile(r"(?<!\d)(?:0\d{1,2}[-\s]?)?\d{3,4}[-\s]?\d{4}(?!\d)")
+EMAIL_PATTERN = re.compile(r"(?<![\w.+-])[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?![\w.+-])")
+
+
+@dataclass(frozen=True)
+class PublicIdentifiers:
+    business_number: str | None
+    phones: tuple[str, ...] = ()
+    emails: tuple[str, ...] = ()
 
 
 def normalize_business_number(value: str) -> str:
@@ -49,3 +59,20 @@ def extract_business_number(html: str) -> str | None:
                 score = sum(token in nearby for token in ("사업자", "business", "brno", "사업자등록"))
                 candidates.append((score, digits))
     return max(candidates, default=(0, None))[1]
+
+
+def extract_public_identifiers(html: str) -> PublicIdentifiers:
+    """Extract only publicly rendered business contact values for search pivots."""
+    text = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+    phones = {
+        re.sub(r"\D", "", match.group(0))
+        for match in PHONE_PATTERN.finditer(text)
+    }
+    # Mobile and landline business contacts are useful pivots; short numeric noise is not.
+    phones = {phone for phone in phones if 9 <= len(phone) <= 11 and phone.startswith("0")}
+    emails = {match.group(0).lower() for match in EMAIL_PATTERN.finditer(text)}
+    return PublicIdentifiers(
+        business_number=extract_business_number(html),
+        phones=tuple(sorted(phones)),
+        emails=tuple(sorted(emails)),
+    )

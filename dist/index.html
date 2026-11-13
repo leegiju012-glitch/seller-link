@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="공개된 사업자 정보로 판매 채널을 확인하는 셀러 리서치 도구" />
+    <title>셀러 링크 | 판매 채널 조회</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main>
+      <nav class="nav">
+        <a class="logo" href="#" aria-label="셀러 링크 홈"><span class="logo-mark">S</span> seller link</a>
+        <span class="nav-status"><i></i> 리서치 워크스페이스</span>
+      </nav>
+
+      <section class="hero">
+        <p class="eyebrow">SELLER RESEARCH / 01</p>
+        <h1>하나의 단서로,<br /><em>판매 채널을 연결하세요.</em></h1>
+        <p class="intro">공개된 통신판매 정보와 스토어 표기 정보를 비교해 동일 사업자에 연결된 쇼핑몰과 상품을 한눈에 검토합니다.</p>
+      </section>
+
+      <section class="search-panel" aria-label="판매자 검색">
+        <label for="seller-query">사업자등록번호 · 상호 · 스토어 주소</label>
+        <div class="search-row">
+          <input id="seller-query" type="search" placeholder="예: 123-45-67890 또는 smartstore.naver.com/example" autocomplete="off" />
+          <button id="search-button" type="button">조회하기 <span>↗</span></button>
+        </div>
+        <p class="helper">공개 정보 기준의 데모 화면입니다. 검색 결과는 예시 데이터로 표시됩니다.</p>
+      </section>
+
+      <section id="empty-state" class="empty-state">
+        <div class="empty-art"><span></span><span></span><span></span></div>
+        <p>조회할 판매자 정보를 입력하세요.</p>
+      </section>
+
+      <section id="results" class="results" hidden aria-live="polite">
+        <div class="result-head">
+          <div>
+            <p class="eyebrow">MATCHED SELLER</p>
+            <h2 id="seller-name">라움컴퍼니</h2>
+            <p class="result-meta">사업자번호 <b>123-45-67890</b> <span>·</span> 3개 판매 채널 확인</p>
+          </div>
+          <div class="confidence"><span>연결 신뢰도</span><strong>92<small>%</small></strong></div>
+        </div>
+
+        <div class="notice">연결 근거: 공개 통신판매 신고 정보 및 각 스토어의 공개 사업자 표기값이 일치합니다.</div>
+
+        <div class="section-title"><h3>확인된 판매 채널</h3><span>3</span></div>
+        <div class="store-grid">
+          <article class="store-card primary">
+            <div class="store-top"><span class="badge">대표 스토어</span><span class="match">일치 4개</span></div>
+            <h4>라움 라이프</h4>
+            <a href="#" onclick="return false;">smartstore.naver.com/raumlife ↗</a>
+            <dl><div><dt>카테고리</dt><dd>리빙 · 주방</dd></div><div><dt>상품 수</dt><dd>48개</dd></div></dl>
+          </article>
+          <article class="store-card">
+            <div class="store-top"><span class="badge neutral">자사몰</span><span class="match">일치 3개</span></div>
+            <h4>RAUM HOME</h4>
+            <a href="#" onclick="return false;">raumhome.co.kr ↗</a>
+            <dl><div><dt>카테고리</dt><dd>홈데코 · 수납</dd></div><div><dt>상품 수</dt><dd>31개</dd></div></dl>
+          </article>
+          <article class="store-card">
+            <div class="store-top"><span class="badge neutral">오픈마켓</span><span class="match">일치 3개</span></div>
+            <h4>라움마켓</h4>
+            <a href="#" onclick="return false;">store.example.com/raummarket ↗</a>
+            <dl><div><dt>카테고리</dt><dd>생활용품</dd></div><div><dt>상품 수</dt><dd>22개</dd></div></dl>
+          </article>
+        </div>
+
+        <div class="products-header"><div class="section-title"><h3>판매 상품</h3><span>최근 수집</span></div><button class="filter" type="button">전체 채널⌄</button></div>
+        <div class="product-list">
+          <article><span class="rank">01</span><div><h4>모듈 수납 박스 3종 세트</h4><p>라움 라이프 · 스마트스토어</p></div><strong>₩29,800</strong><span class="product-tag">판매중</span></article>
+          <article><span class="rank">02</span><div><h4>실리콘 조리도구 7P</h4><p>라움 라이프 · RAUM HOME</p></div><strong>₩18,900</strong><span class="product-tag">판매중</span></article>
+          <article><span class="rank">03</span><div><h4>와이드 패브릭 바스켓</h4><p>라움마켓 · RAUM HOME</p></div><strong>₩24,000</strong><span class="product-tag">판매중</span></article>
+        </div>
+      </section>
+    </main>
+    <footer>SELLER LINK <span>PUBLIC DATA RESEARCH TOOL</span></footer>
+    <script src="./app.js"></script>
+  </body>
+</html>

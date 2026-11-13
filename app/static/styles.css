@@ -1,0 +1,22 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, 'Noto Sans KR', sans-serif; color: #111; background: #fff; }
+main { width: min(760px, calc(100% - 32px)); margin: 96px auto; }
+form { display: flex; gap: 8px; }
+input, button { height: 46px; border: 1px solid #bbb; border-radius: 0; background: #fff; font: inherit; }
+input { min-width: 0; flex: 1; padding: 0 12px; }
+button { padding: 0 18px; cursor: pointer; color: #fff; background: #111; border-color: #111; }
+button:disabled { opacity: .55; cursor: wait; }
+#message { min-height: 22px; margin: 14px 0; font-size: 14px; color: #555; }
+.business { display: grid; grid-template-columns: 120px 1fr; margin: 26px 0; border-top: 1px solid #111; }
+.business dt, .business dd { margin: 0; padding: 12px 0; border-bottom: 1px solid #ddd; font-size: 14px; }
+.business dt { color: #666; }
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.card { min-height: 120px; padding: 16px; border: 1px solid #ddd; }
+.card h2 { margin: 0 0 14px; font-size: 15px; }
+.card p { margin: 0; font-size: 13px; word-break: break-word; }
+.card p + p { margin-top: 8px; }
+.card a { color: inherit; }
+.status { display: inline-block; border: 1px solid #777; padding: 3px 6px; font-size: 11px; }
+.status.not-found, .status.not-checked { color: #777; border-color: #bbb; }
+.status.error { color: #a00; border-color: #a00; }
+@media (max-width: 520px) { main { margin: 48px auto; } .grid { grid-template-columns: 1fr; } .business { grid-template-columns: 104px 1fr; } }

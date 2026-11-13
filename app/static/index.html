@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seller Link</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main>
+    <form id="form">
+      <input id="query" aria-label="사업자등록번호 또는 스마트스토어 URL" placeholder="사업자등록번호 또는 스마트스토어 URL" autocomplete="off" required />
+      <button id="submit" type="submit">조회</button>
+    </form>
+    <p id="message" role="status"></p>
+    <section id="result" hidden>
+      <dl id="business" class="business"></dl>
+      <div id="marketplaces" class="grid"></div>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

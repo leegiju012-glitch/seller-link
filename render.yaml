@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: seller-link
+    runtime: docker
+    plan: free
+    envVars:
+      - key: FTC_SERVICE_KEY
+        sync: false
+      - key: SERPAPI_KEY
+        sync: false

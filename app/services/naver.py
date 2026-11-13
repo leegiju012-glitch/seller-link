@@ -89,4 +89,8 @@ async def search_smartstores(
                 store_url=store_url,
                 evidence="네이버 웹문서 검색 결과의 사업자등록번호 일치",
             ))
-    return list(matches.values()) or [Marketplace(platform="네이버 스마트스토어", status="not_found", evidence="네이버 웹문서 검색 결과 없음")]
+    return list(matches.values()) or [Marketplace(
+        platform="네이버 스마트스토어",
+        status="not_checked",
+        evidence="사업자등록번호가 네이버 웹문서에 색인되지 않아 확인할 수 없습니다.",
+    )]

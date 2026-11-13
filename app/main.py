@@ -45,8 +45,16 @@ async def index() -> FileResponse:
 
 
 @app.get("/healthz")
-async def healthz() -> dict[str, bool]:
-    return {"ok": True, "ftc_configured": bool(settings.ftc_service_key), "serpapi_configured": bool(settings.serpapi_key)}
+async def healthz() -> dict[str, bool | str]:
+    return {
+        "ok": True,
+        "release": "naver-api-hub-2026-11-13",
+        "ftc_configured": bool(settings.ftc_service_key),
+        "serpapi_configured": bool(settings.serpapi_key),
+        "naver_api_hub_configured": bool(
+            settings.naver_client_id and settings.naver_client_secret
+        ),
+    }
 
 
 @app.get("/api/lookup", response_model=LookupResult)
